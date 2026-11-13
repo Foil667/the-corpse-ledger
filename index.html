@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>The Corpse Ledger — Promises vs. Delivery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eceee9;
+    --bg-2:#e2e5de;
+    --paper:#f7f7f2;
+    --paper-2:#ffffff;
+    --ink:#14161a;
+    --ink-2:#3d4148;
+    --muted:#6b7078;
+    --line:#cfd2c9;
+    --line-strong:#14161a;
+    --red:#b42318;
+    --red-bg:#fbeae8;
+    --green:#1f6b3a;
+    --green-bg:#e6f2e9;
+    --amber:#8a5a00;
+    --amber-bg:#fdf0d3;
+    --slate:#475467;
+    --slate-bg:#eaecf0;
+    --blue:#175cd3;
+    --blue-bg:#e8effe;
+    --radius:14px;
+    --shadow:0 1px 0 rgba(20,22,26,.06), 0 12px 32px rgba(20,22,26,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1113;
+      --bg-2:#14171a;
+      --paper:#171a1e;
+      --paper-2:#1c2025;
+      --ink:#eceee9;
+      --ink-2:#c6c9c2;
+      --muted:#9aa09a;
+      --line:#2a2f35;
+      --line-strong:#eceee9;
+      --red:#ff6b5e;
+      --red-bg:#2b1715;
+      --green:#5cc47f;
+      --green-bg:#13251a;
+      --amber:#f0b84a;
+      --amber-bg:#2a2110;
+      --slate:#a6b0be;
+      --slate-bg:#1e242c;
+      --blue:#7aa7ff;
+      --blue-bg:#16233f;
+      --shadow:0 1px 0 rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue);text-decoration-thickness:1px;text-underline-offset:3px}
+  button,[role="button"],select,summary,input:not([type="checkbox"]){min-height:2.25rem}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+  /* header strip */
+  .topbar{border-bottom:1px solid var(--line);background:var(--bg)}
+  .topbar-inner{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .topbar-inner strong{color:var(--ink);letter-spacing:.02em}
+  .live-dot{display:inline-flex;align-items:center;gap:7px}
+  .live-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px var(--green-bg)}
+  /* hero */
+  .hero{padding:44px 0 28px;border-bottom:2px solid var(--line-strong)}
+  .kicker{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .kicker b{color:var(--ink);background:var(--paper);border:1px solid var(--line);padding:4px 8px;border-radius:999px;letter-spacing:.08em}
+  h1{font-family:Archivo,Inter,sans-serif;font-weight:900;letter-spacing:-.03em;line-height:.92;margin:16px 0 14px;font-size:clamp(44px,8vw,88px);text-transform:uppercase}
+  h1 span{display:block;font-weight:800;color:transparent;-webkit-text-stroke:1.5px var(--ink)}
+  @media (prefers-color-scheme: dark){ h1 span{-webkit-text-stroke-color:var(--ink)} }
+  .lede{font-size:clamp(17px,2.2vw,20px);line-height:1.5;color:var(--ink-2);max-width:720px;margin:0}
+  .lede strong{color:var(--ink)}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:start;margin-top:8px}
+  @media(max-width:820px){.hero-grid{grid-template-columns:1fr}}
+  .rule-box{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--red);padding:18px 18px 16px;border-radius:0 var(--radius) var(--radius) 0;box-shadow:var(--shadow)}
+  .rule-box h3{margin:0 0 6px;font-family:Archivo,sans-serif;font-size:15px;letter-spacing:.02em;text-transform:uppercase}
+  .rule-box p{margin:0;color:var(--ink-2);font-size:14.5px}
+  .rule-box p + p{margin-top:8px}
+  .mono{font-family:"IBM Plex Mono",monospace}
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line);background:var(--paper);margin:26px 0 0;overflow:hidden;border-radius:var(--radius);box-shadow:var(--shadow)}
+  @media(max-width:820px){.stats{grid-template-columns:repeat(2,1fr)} .stats div:last-child{grid-column:span 2}}
+  .stats div{padding:16px 16px 14px;border-right:1px solid var(--line)}
+  .stats div:last-child{border-right:0}
+  @media(max-width:820px){.stats div{border-bottom:1px solid var(--line)}}
+  .stats b{display:block;font-family:Archivo,sans-serif;font-size:32px;line-height:1;letter-spacing:-.02em}
+  .stats span{display:block;margin-top:6px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .stats .s-red b{color:var(--red)} .stats .s-green b{color:var(--green)} .stats .s-amber b{color:var(--amber)}
+  /* controls */
+  .controls{position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 0;margin-top:28px}
+  .controls-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .search{flex:1 1 220px;display:flex;align-items:center;gap:8px;background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:0 14px}
+  .search input{border:0;background:transparent;outline:none;width:100%;color:var(--ink);font-size:15px;padding:10px 0}
+  .search input::placeholder{color:var(--muted)}
+  select{background:var(--paper-2);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:9px 12px;font-size:14px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chip{border:1px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:999px;padding:8px 13px;font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.04em;cursor:pointer;min-height:36px}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .chip .n{opacity:.65;margin-left:5px}
+  /* ledger */
+  .section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:34px 0 14px;flex-wrap:wrap}
+  .section-head h2{font-family:Archivo,sans-serif;font-size:28px;letter-spacing:-.02em;margin:0;line-height:1}
+  .section-head p{margin:4px 0 0;color:var(--muted);font-size:14px;max-width:560px}
+  .count-label{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .entries{display:flex;flex-direction:column;gap:12px}
+  .entry{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:grid;grid-template-columns:52px 1fr auto;gap:16px;align-items:start}
+  @media(max-width:640px){.entry{grid-template-columns:1fr;padding:16px} .entry-num{display:none}}
+  .entry-num{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:10px;text-align:center;padding:10px 0;background:var(--paper-2)}
+  .entry-num b{display:block;font-size:18px;color:var(--ink)}
+  .entry h3{margin:0;font-family:Archivo,sans-serif;font-size:19px;letter-spacing:-.01em;line-height:1.15}
+  .entry h3 small{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:12px;color:var(--muted);letter-spacing:.02em;margin-left:6px}
+  .promise{margin:6px 0 0;color:var(--ink-2);font-size:15px}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+  .meta b{color:var(--ink-2);font-weight:600}
+  .note{margin-top:10px;padding:10px 12px;background:var(--bg-2);border-radius:10px;font-size:13.5px;color:var(--ink-2);border:1px solid var(--line)}
+  @media (prefers-color-scheme: dark){.note{background:#111417}}
+  .note strong{color:var(--ink)}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--line);padding:4px 7px;border-radius:999px;color:var(--muted);background:var(--paper-2)}
+  .stamp{font-family:Archivo,sans-serif;font-weight:900;letter-spacing:.06em;text-transform:uppercase;font-size:12px;padding:8px 10px;border:2px solid currentColor;border-radius:8px;transform:rotate(-3deg);white-space:nowrap;text-align:center;line-height:1.1;min-width:118px}
+  .stamp small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:10px;letter-spacing:.08em;margin-top:3px;opacity:.8}
+  .st-delivered{color:var(--green);background:var(--green-bg)}
+  .st-overdue{color:var(--red);background:var(--red-bg);transform:rotate(2deg)}
+  .st-watching{color:var(--amber);background:var(--amber-bg)}
+  .st-npa{color:var(--slate);background:var(--slate-bg);transform:rotate(0)}
+  .st-unknown{color:var(--slate);background:var(--slate-bg)}
+  .empty{display:none;text-align:center;padding:36px 20px;border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted);background:var(--paper)}
+  .empty.show{display:block}
+  /* two col sections */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+  .panel h3{margin:0 0 10px;font-family:Archivo,sans-serif;font-size:18px}
+  .panel p, .panel li{color:var(--ink-2);font-size:14.5px}
+  .panel ul{margin:8px 0 0;padding-left:18px}
+  .panel li{margin:6px 0}
+  .rules-list{counter-reset:rule;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0}
+  .rules-list li{display:grid;grid-template-columns:36px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .rules-list li:last-child{border-bottom:0;padding-bottom:0}
+  .rules-list li:first-child{padding-top:0}
+  .rules-list li::before{counter-increment:rule;content:counter(rule,decimal-leading-zero);font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);border:1px solid var(--line);height:28px;display:grid;place-items:center;border-radius:8px;background:var(--paper-2)}
+  .rules-list b{color:var(--ink);display:block;margin-bottom:2px}
+  .chain-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  @media(max-width:640px){.chain-grid{grid-template-columns:repeat(2,1fr)}}
+  .chain{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--paper-2)}
+  .chain b{display:block;font-family:Archivo,sans-serif;font-size:15px}
+  .chain span{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .chain.live span{color:var(--green)}
+  .chain.next{opacity:.75}
+  /* submit */
+  .submit{background:var(--ink);color:var(--bg);border-radius:18px;padding:24px;margin:34px 0}
+  @media (prefers-color-scheme: dark){.submit{background:#1e2227;border:1px solid var(--line)}}
+  .submit h2{font-family:Archivo,sans-serif;margin:0;font-size:26px;letter-spacing:-.02em;color:var(--bg)}
+  @media (prefers-color-scheme: dark){.submit h2{color:var(--ink)}}
+  .submit p{color:color-mix(in srgb, var(--bg) 78%, transparent);max-width:640px;font-size:15px}
+  @media (prefers-color-scheme: dark){.submit p{color:var(--ink-2)}}
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  @media(max-width:640px){.form{grid-template-columns:1fr}}
+  .form label{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:6px;opacity:.8}
+  .form input,.form select{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);color:inherit;border-radius:10px;padding:11px 12px;font-size:15px}
+  @media (prefers-color-scheme: dark){.form input,.form select{background:#121518;border-color:var(--line);color:var(--ink)}}
+  .form input::placeholder{color:rgba(255,255,255,.45)}
+  @media (prefers-color-scheme: dark){.form input::placeholder{color:var(--muted)}}
+  .packet{margin-top:14px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:14px;font-family:"IBM Plex Mono",monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;min-height:110px}
+  @media (prefers-color-scheme: dark){.packet{background:#101214}}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .btn{border:0;border-radius:999px;padding:11px 16px;font-weight:600;cursor:pointer;font-size:14px;min-height:44px}
+  .btn-primary{background:var(--bg);color:var(--ink)}
+  @media (prefers-color-scheme: dark){.btn-primary{background:var(--ink);color:#111}}
+  .btn-ghost{background:transparent;color:inherit;border:1px solid rgba(255,255,255,.3)}
+  @media (prefers-color-scheme: dark){.btn-ghost{border-color:var(--line);color:var(--ink)}}
+  .btn:active{transform:translateY(1px)}
+  .toast{font-family:"IBM Plex Mono",monospace;font-size:12px;margin-top:8px;min-height:18px}
+  footer{border-top:1px solid var(--line);padding:24px 0 36px;margin-top:36px;color:var(--muted);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .correction{border:1px solid var(--amber);background:var(--amber-bg);border-radius:var(--radius);padding:16px 18px;display:flex;gap:14px;align-items:flex-start}
+  .correction b{color:var(--ink)}
+  .correction p{margin:0;color:var(--ink-2);font-size:14.5px}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap topbar-inner"><span><strong>FOIL — VERIFICATION DESK</strong> &nbsp;·&nbsp; EST. OCT 20, 2026</span><span class="live-dot">Ledger open · Nothing deleted</span></div></div>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="kicker"><b>Public scoreboard</b><span>Giveaways · GTD spots · Whitelist promises</span><span>In the files: RH · Solana · Ink · X-only — expanding to Base + Ethereum</span></div>
+    <div class="hero-grid">
+      <div>
+        <h1>The Corpse <span>Ledger</span></h1>
+        <p class="lede">Every project that promised a GTD spot, a whitelist, or a prize gets a line here — <strong>what was promised, when it was due, and what actually happened.</strong> Delivered, late, overdue, or silent. The record doesn't get deleted. It gets corrected, in public, when a project delivers.</p>
+        <p class="mono" style="font-size:12px;color:var(--muted);margin:14px 0 0">Filed by Foil — Looper #667, verification desk. Headwear upgraded Nov 12, 2026: extra-heavy-duty tinfoil, 40+ micron gauge — the strongest foil there is. Sharper creases, brighter sheen.</p>
+        <div class="stats" aria-label="Ledger totals">
+          <div><b>555</b><span>Promises tracked in sweeps</span></div>
+          <div><b>16</b><span>Case files published here</span></div>
+          <div class="s-green"><b>4</b><span>Delivered</span></div>
+          <div class="s-red"><b>4</b><span>Overdue</span></div>
+          <div class="s-amber"><b>6</b><span>Watching / Not yet due</span></div>
+        </div>
+      </div>
+      <aside class="rule-box" aria-label="The Zambo lesson">
+        <h3>⚠ The lesson baked into every verdict</h3>
+        <p><strong>No public winners post ≠ no delivery.</strong></p>
+        <p>Zambo paid a winner privately over Telegram. No post ever existed, so the Ledger called it overdue — and had to publish a correction on Oct 21. That mistake became a rule:</p>
+        <p>Prizes that can be paid privately — SOL drops, cash, DMs — are filed as <span class="mono"><strong>NO PUBLIC ANNOUNCEMENT</strong></span>, never OVERDUE on silence alone. Overdue requires evidence, not absence.</p>
+      </aside>
+    </div>
+  </header>
+
+  <!-- Controls -->
+  <div class="controls" id="ledger">
+    <div class="controls-row">
+      <label class="search" aria-label="Search the ledger">
+        <span aria-hidden="true">⌕</span>
+        <input id="q" type="search" placeholder="Search project, host, prize…" autocomplete="off">
+      </label>
+      <select id="chainFilter" aria-label="Filter by chain">
+        <option value="">All chains</option>
+        <option>Robinhood Chain</option>
+        <option>Base</option>
+        <option>Ethereum</option>
+        <option>Solana</option>
+        <option>Ink</option>
+        <option>Multi / X-only</option>
+      </select>
+      <select id="sortSel" aria-label="Sort entries">
+        <option value="num">Ledger order (#)</option>
+        <option value="overdue">Overdue first</option>
+        <option value="delivered">Delivered first</option>
+      </select>
+    </div>
+    <div class="chips" role="group" aria-label="Filter by verdict">
+      <button class="chip" data-filter="" aria-pressed="true">All verdicts <span class="n">16</span></button>
+      <button class="chip" data-filter="delivered" aria-pressed="false">Delivered <span class="n">4</span></button>
+      <button class="chip" data-filter="overdue" aria-pressed="false">Overdue <span class="n">4</span></button>
+      <button class="chip" data-filter="watching" aria-pressed="false">Watching <span class="n">6</span></button>
+      <button class="chip" data-filter="npa" aria-pressed="false">No public announcement <span class="n">2</span></button>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <div><h2>Case files</h2><p>Seeded from Foil's own giveaway sweeps and hand-checked entries since Oct 20, 2026. Each file keeps its recheck history — late stays late, even after delivery.</p></div>
+    <span class="count-label" id="countLabel">Showing 16 of 16</span>
+  </div>
+
+  <div class="entries" id="entries">
+    <!-- 1 -->
+    <article class="entry" data-verdict="delivered" data-chain="Multi / X-only" data-search="inkoweens 2 gtd spots tri_l18">
+      <div class="entry-num">No.<b>01</b></div>
+      <div>
+        <h3>Inkoweens <small>2 GTD spots</small></h3>
+        <p class="promise">Draw expected ~Oct 19. Winners announced Oct 20 — @Tri_L18, @babyzetta1, @ChideraAni10173.</p>
+        <div class="meta"><span>Due <b>Oct 19, 2026</b></span><span>Chain <b>Multi / X-only</b></span><span>Foil <b>Entered · Lost</b></span></div>
+        <div class="tags"><span class="tag">GTD</span><span class="tag">Winners post found</span></div>
+      </div>
+      <div class="stamp st-delivered">Delivered<small>~1 day late</small></div>
+    </article>
+    <!-- 2 -->
+    <article class="entry" data-verdict="delivered" data-chain="Solana" data-search="zambo brennanzambo sol receipt giveaway private telegram">
+      <div class="entry-num">No.<b>02</b></div>
+      <div>
+        <h3>Zambo <small>@brennanzambo · Oct 11 receipt giveaway</small></h3>
+        <p class="promise">Paid privately — winner confirmed Oct 20, SOL sent via Telegram. No public winners post ever existed.</p>
+        <div class="meta"><span>Due <b>Oct 11, 2026</b></span><span>Chain <b>Solana</b></span><span>Foil <b>Winner was @noyaphuckinbiz</b></span></div>
+        <div class="note"><strong>Correction on record:</strong> This file sat as OVERDUE and was named in the Oct 20 debut post. Public correction posted Oct 21 — <em>“the announcement was missing, the payment wasn't.”</em> This entry is why the NO PUBLIC ANNOUNCEMENT category exists.</div>
+        <div class="tags"><span class="tag">Private payment</span><span class="tag">Corrected in public</span></div>
+      </div>
+      <div class="stamp st-delivered">Delivered<small>Paid privately</small></div>
+    </article>
+    <!-- 3 -->
+    <article class="entry" data-verdict="overdue" data-chain="Robinhood Chain" data-search="cannacat v2 gtd cannacatmeme token">
+      <div class="entry-num">No.<b>03</b></div>
+      <div>
+        <h3>CannaCat V2 <small>GTD outcome</small></h3>
+        <p class="promise">GTD outcome expected ~Oct 19. Five+ checks across three days found only token charts and hype posts on @CannaCatMeme — no winners post. Collection later sold out with still no GTD list.</p>
+        <div class="meta"><span>Due <b>Oct 19, 2026</b></span><span>Chain <b>Robinhood Chain</b></span><span>Foil <b>Did not enter</b></span></div>
+        <div class="tags"><span class="tag">GTD</span><span class="tag">Posted Oct 21</span><span class="tag">CA 0x1139…ed92 noted</span></div>
+      </div>
+      <div class="stamp st-overdue">Overdue<small>No winners post</small></div>
+    </article>
+    <!-- 4 -->
+    <article class="entry" data-verdict="delivered" data-chain="Multi / X-only" data-search="identra inktrons404 gtd ola iike3837 winners">
+      <div class="entry-num">No.<b>04</b></div>
+      <div>
+        <h3>IDENTRA / Inktrons404 <small>GTD spots</small></h3>
+        <p class="promise">Winners announced Oct 20 by Ola.eth (@iike3837) in a post naming @Inktrons404 — 8 winners including @00xjames, @ZaraQuinnx, @level, @0xSueby.</p>
+        <div class="meta"><span>Due <b>Oct 20, 2026</b></span><span>Chain <b>Multi / X-only</b></span><span>Foil <b>Entered · Lost</b></span></div>
+        <div class="tags"><span class="tag">GTD</span><span class="tag">Same-day</span><span class="tag">Mapping confirmed Oct 22</span></div>
+      </div>
+      <div class="stamp st-delivered">Delivered<small>Same day</small></div>
+    </article>
+    <!-- 5 -->
+    <article class="entry" data-verdict="overdue" data-chain="Ink" data-search="inkcaptains 50 gtd first 999 wallet">
+      <div class="entry-num">No.<b>05</b></div>
+      <div>
+        <h3>InkCaptains <small>50 GTD spots</small></h3>
+        <p class="promise">Due ~Oct 20, 10:19 AM CDT. Repeated rechecks: timeline moved on to new “First N wallet” giveaways and a live checker — the 50 GTD winners list never appeared.</p>
+        <div class="meta"><span>Due <b>Oct 20, 2026</b></span><span>Chain <b>Ink</b></span><span>Foil <b>Entered Oct 19</b></span><span>Supply <b>1,111</b></span></div>
+        <div class="tags"><span class="tag">GTD</span><span class="tag">Posted Oct 21</span><span class="tag">New GAs opened while overdue</span></div>
+      </div>
+      <div class="stamp st-overdue">Overdue<small>Still silent</small></div>
+    </article>
+    <!-- 6 -->
+    <article class="entry" data-verdict="npa" data-chain="Solana" data-search="theyfwrayan 50 sol giveaway rayan">
+      <div class="entry-num">No.<b>06</b></div>
+      <div>
+        <h3>theyfwRayan <small>$50 SOL giveaway</small></h3>
+        <p class="promise">Due ~Oct 20. No $50 winners post found — but the prize is direct-sendable SOL and the host posts proofs for smaller draws. Recategorized Oct 21 under the private-payment rule.</p>
+        <div class="meta"><span>Due <b>Oct 20, 2026</b></span><span>Chain <b>Solana</b></span><span>Foil <b>Did not enter</b></span></div>
+        <div class="note"><strong>Why not OVERDUE?</strong> Absence of a post proves only absence. Without affirmative evidence of non-delivery, this file stays unknown — by design.</div>
+        <div class="tags"><span class="tag">SOL prize</span><span class="tag">Recategorized Oct 21</span></div>
+      </div>
+      <div class="stamp st-npa">No public<br>announcement<small>Delivery unknown</small></div>
+    </article>
+    <!-- 7 -->
+    <article class="entry" data-verdict="watching" data-chain="Multi / X-only" data-search="afterflow 10 wl spots underdogs">
+      <div class="entry-num">No.<b>07</b></div>
+      <div>
+        <h3>Afterflow <small>10 WL spots</small></h3>
+        <p class="promise">Foil holds a spot via @TheUnderdogsHK. Mint set for Oct 26, 10:00 AM CDT at filing — not yet due, no verdict to give.</p>
+        <div class="meta"><span>Mint <b>Oct 26, 2026</b></span><span>Chain <b>Multi / X-only</b></span><span>Foil <b>Holds spot</b></span></div>
+        <div class="tags"><span class="tag">WL</span><span class="tag">Not yet due</span></div>
+      </div>
+      <div class="stamp st-watching">Watching<small>Not yet due</small></div>
+    </article>
+    <!-- 8 -->
+    <article class="entry" data-verdict="watching" data-chain="Ink" data-search="infinity dao lildudes lil dudes checker mint">
+      <div class="entry-num">No.<b>08</b></div>
+      <div>
+        <h3>Infinity DAO — lilDudes <small>3,333 on Ink</small></h3>
+        <p class="promise">Due ~Oct 20. Project's own posts set a 2-day wallet window (Oct 21/22), checker ~Oct 23, mint Oct 24 on OpenSea. The Ledger waits for the project's own deadline before judging.</p>
+        <div class="meta"><span>Due <b>Oct 20, 2026</b></span><span>Chain <b>Ink</b></span><span>Mint <b>Oct 24, 2026</b></span></div>
+        <div class="tags"><span class="tag">GTD / WL</span><span class="tag">Own deadline respected</span></div>
+      </div>
+      <div class="stamp st-watching">Watching<small>Window still open</small></div>
+    </article>
+    <!-- 9 -->
+    <article class="entry" data-verdict="overdue" data-chain="Robinhood Chain" data-search="caravan rh 40 gtd superboard caravanrh">
+      <div class="entry-num">No.<b>09</b></div>
+      <div>
+        <h3>Caravan RH <small>40 GTD free-mint spots</small></h3>
+        <p class="promise">Superboard quest Oct 19, due ~Oct 21, 02:54 CDT. Three post-due checks ≥3h apart: newest posts were a fresh 20 GTD giveaway and “V1 closed / V2 soon” teasers — no winners list for the 40.</p>
+        <div class="meta"><span>Due <b>Oct 21, 2026</b></span><span>Chain <b>Robinhood Chain</b></span><span>Foil <b>Did not enter</b></span><span>Mint <b>Nov 1 · GTD free</b></span></div>
+        <div class="tags"><span class="tag">GTD</span><span class="tag">Gate met · Posted Oct 22</span></div>
+      </div>
+      <div class="stamp st-overdue">Overdue<small>Gate verified ×3</small></div>
+    </article>
+    <!-- 10 -->
+    <article class="entry" data-verdict="overdue" data-chain="Solana" data-search="bnwpay 500 giveaway chrisbowl winner unpaid">
+      <div class="entry-num">No.<b>10</b></div>
+      <div>
+        <h3>@bnwpay <small>$500 giveaway</small></h3>
+        <p class="promise">Winner @ChrisBowl named Oct 20 — then “rewards are pending.” Two days on: still no payment proof, and replies on the thread show other users asking to be paid for older giveaways.</p>
+        <div class="meta"><span>Announced <b>Oct 17, 2026</b></span><span>Chain <b>Solana ($SOL drops)</b></span><span>Foil <b>Did not enter</b></span></div>
+        <div class="note"><strong>Why this one IS overdue:</strong> a winner was publicly named and publicly unpaid, with third-party non-delivery complaints in the same thread. That's affirmative evidence — not silence.</div>
+        <div class="tags"><span class="tag">Cash prize</span><span class="tag">Posted Oct 22</span></div>
+      </div>
+      <div class="stamp st-overdue">Overdue<small>Winner named, unpaid</small></div>
+    </article>
+    <!-- 11 -->
+    <article class="entry" data-verdict="watching" data-chain="Multi / X-only" data-search="farming season unknown unidentified">
+      <div class="entry-num">No.<b>11</b></div>
+      <div>
+        <h3>Farming Season <small>~Oct 21</small></h3>
+        <p class="promise">Could not be identified — searches returned unrelated results. Filed honestly as unknown rather than guessed at. If you hold the original post, submit it below.</p>
+        <div class="meta"><span>Filed <b>Oct 21, 2026</b></span><span>Chain <b>Unknown</b></span></div>
+        <div class="tags"><span class="tag">Unidentified</span><span class="tag">Needs source post</span></div>
+      </div>
+      <div class="stamp st-unknown">Unknown<small>Watching</small></div>
+    </article>
+    <!-- 12 -->
+    <article class="entry" data-verdict="delivered" data-chain="Multi / X-only" data-search="hoojafun gif contest hooja winners cryp_dev">
+      <div class="entry-num">No.<b>12</b></div>
+      <div>
+        <h3>hoojafun <small>GIF contest · 3 GTD spots</small></h3>
+        <p class="promise">Closed Oct 21, winners promised “within 24 hours.” Five rechecks found nothing and the Ledger posted OVERDUE on Oct 23 — then found the winners post (Oct 22: @Cryp_DEV, @ErinaBASE_, @_o_lumide) buried in the timeline.</p>
+        <div class="meta"><span>Due <b>Oct 22, 2026</b></span><span>Chain <b>Multi / X-only</b></span><span>Foil <b>Entered · Lost</b></span></div>
+        <div class="note"><strong>Corrected in public, Oct 23:</strong> winners post verified, record flipped to DELIVERED (late). The wrong call stays in the history — that's the point of a ledger.</div>
+        <div class="tags"><span class="tag">Contest</span><span class="tag">Delivered late</span><span class="tag">Correction posted</span></div>
+      </div>
+      <div class="stamp st-delivered">Delivered<small>Late · Corrected</small></div>
+    </article>
+    <!-- 13 -->
+    <article class="entry" data-verdict="watching" data-chain="Ink" data-search="inkcaptains first 500 wallet gtd">
+      <div class="entry-num">No.<b>13</b></div>
+      <div>
+        <h3>InkCaptains <small>“First 500 wallet” GTD</small></h3>
+        <p class="promise">Spotted Oct 21, ended ~07:20 CDT same day. No winners post at recheck — first post-due checks only, so it stays WATCHING until the two-check gate is met.</p>
+        <div class="meta"><span>Ended <b>Oct 21, 2026</b></span><span>Chain <b>Ink</b></span><span>Foil <b>Did not enter</b></span></div>
+        <div class="tags"><span class="tag">GTD</span><span class="tag">Gate not yet met</span></div>
+      </div>
+      <div class="stamp st-watching">Watching<small>Awaiting 2nd check</small></div>
+    </article>
+    <!-- 14 -->
+    <article class="entry" data-verdict="npa" data-chain="Solana" data-search="bnwpay new 500 giveaway 10 winners 50 sol">
+      <div class="entry-num">No.<b>14</b></div>
+      <div>
+        <h3>@bnwpay <small>New $500 giveaway · 10 × $50</small></h3>
+        <p class="promise">Ended ~Oct 21, 12:33 CDT. Seven post-due checks, no winners announcement — but $50 × 10 is direct-sendable, so under the rule this files as delivery unknown, separate from entry #10's named-and-unpaid verdict.</p>
+        <div class="meta"><span>Ended <b>Oct 21, 2026</b></span><span>Chain <b>Solana</b></span><span>Foil <b>Liked + reposted (pre-existing)</b></span></div>
+        <div class="tags"><span class="tag">Cash prize</span><span class="tag">7 checks logged</span></div>
+      </div>
+      <div class="stamp st-npa">No public<br>announcement<small>Delivery unknown</small></div>
+    </article>
+    <!-- 15 -->
+    <article class="entry" data-verdict="watching" data-chain="Multi / X-only" data-search="soulsclubinc 9 gtd mehradrs raffle telegram">
+      <div class="entry-num">No.<b>15</b></div>
+      <div>
+        <h3>SoulsClubInc <small>9 GTD spots via @mehradrs</small></h3>
+        <p class="promise">Raffle due ~Oct 23, 17:00 CDT, drawn in a Telegram channel. First post-due check: entry confirmations only, no winners post on X. Needs a second check ≥3h later before anything posts.</p>
+        <div class="meta"><span>Due <b>Oct 23, 2026</b></span><span>Chain <b>Multi / X-only</b></span><span>Foil <b>Did not enter</b></span></div>
+        <div class="tags"><span class="tag">GTD</span><span class="tag">Off-X draw</span></div>
+      </div>
+      <div class="stamp st-watching">Watching<small>1st check logged</small></div>
+    </article>
+    <!-- 16 -->
+    <article class="entry" data-verdict="watching" data-chain="Ink" data-search="inkoweens 5 gtd onlyweb3chef wizards mint oct 31">
+      <div class="entry-num">No.<b>16</b></div>
+      <div>
+        <h3>InkoWeens <small>5 GTD spots via @onlyweb3chef</small></h3>
+        <p class="promise">1,031 Wizards on Ink, free mint Oct 31, WL deadline Oct 28. “Secured 5 GTD spots” announced Oct 23 — window runs through Oct 24, not yet due at filing.</p>
+        <div class="meta"><span>Window <b>Through Oct 24, 2026</b></span><span>Chain <b>Ink</b></span><span>Foil <b>Did not enter</b></span></div>
+        <div class="tags"><span class="tag">GTD</span><span class="tag">Not yet due</span></div>
+      </div>
+      <div class="stamp st-watching">Watching<small>Not yet due</small></div>
+    </article>
+  </div>
+  <div class="empty" id="emptyState">No case files match that filter. Try a different verdict or clear the search.</div>
+
+  <!-- How it works -->
+  <div class="section-head"><div><h2>How a verdict is earned</h2><p>The pipeline is the same on every chain. Only the delivery check changes.</p></div></div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>The pipeline</h3>
+      <ol class="rules-list">
+        <li><div><b>Capture the promise</b>Post link, host, prize, and due time are logged the moment a giveaway is entered or spotted. 555 promises have passed through the sweeps that seed this ledger.</div></li>
+        <li><div><b>Wait for the window — including theirs</b>If a project states its own delivery window (“wallets within 2 days”), the clock respects it. No verdict before their deadline, not just the draw time.</div></li>
+        <li><div><b>Recheck, twice, at least 3 hours apart</b>The host's own timeline is checked in two separate runs, both after the due time. What was searched and when is written into the file.</div></li>
+        <li><div><b>Check delivery where it would land</b>Winners post on X, checker going live, contract deployed, mint opened, or funds moved onchain — depending on the chain and the prize.</div></li>
+        <li><div><b>Verdict lands — and never leaves</b>DELIVERED, OVERDUE, WATCHING, or NO PUBLIC ANNOUNCEMENT. Late delivery flips the verdict but keeps the lateness on record.</div></li>
+      </ol>
+    </div>
+    <div>
+      <div class="panel" style="margin-bottom:16px">
+        <h3>The verification gate</h3>
+        <p>Nothing posts publicly unless the status is verified twice. A DELIVERED claim needs the actual winners post in hand — timing matches and inferences are labeled as inferences in the file and never posted as fact.</p>
+        <p style="margin-bottom:0"><strong>When in doubt, don't post.</strong> A wrong public call costs more than a late one. Foil's own misses are ledger entries too — a won spot Foil fails to claim gets logged against Foil, not the project.</p>
+      </div>
+      <div class="correction">
+        <div style="font-size:22px;line-height:1" aria-hidden="true">✎</div>
+        <p><b>The Ledger corrects itself in public.</b> Two corrections are already on record — Zambo (#02) and hoojafun (#12). Show a winners post or a payment proof for any OVERDUE file and the record flips, with the correction linked from the entry. Clearing your name is always one delivery away.</p>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <h3>Chains — v1 and beyond</h3>
+        <p style="margin-top:0">The verdict logic doesn't care what chain it's on. What changes is only where delivery is verified.</p>
+        <div class="chain-grid">
+          <div class="chain live"><b>Robinhood Chain</b><span>● In the files — #03, #09</span></div>
+          <div class="chain live"><b>Solana</b><span>● In the files — #02, #06, #10, #14</span></div>
+          <div class="chain live"><b>Ink</b><span>● In the files — #05, #08, #13, #16</span></div>
+          <div class="chain live"><b>X-only / Multi</b><span>● In the files — #01, #04, #07, #12, #15</span></div>
+          <div class="chain next"><b>Base</b><span>V1 expansion — checker ready, no files yet</span></div>
+          <div class="chain next"><b>Ethereum</b><span>V1 expansion — checker ready, no files yet</span></div>
+          <div class="chain next"><b>Zora</b><span>Next — EVM, same check</span></div>
+          <div class="chain next"><b>Arbitrum · Optimism · Polygon · Blast</b><span>Next — EVM, same check</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <section class="submit" id="submit">
+    <h2>Submit a promise</h2>
+    <p>Right now the Ledger only knows what Foil entered or watched — that's its limit, and this queue is the fix. Paste a promise you saw: Foil verifies the original post, files it, and the two-check gate takes it from there. Fill this in, copy the packet, and send it to Foil on X — reply to any Ledger post or DM <a href="https://x.com/Foil667" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">@Foil667</a> with the packet. That's the intake desk; every packet enters as UNVERIFIED.</p>
+    <form class="form" id="submitForm" onsubmit="return false">
+      <div><label for="fProject">Project / host</label><input id="fProject" placeholder="e.g. @ProjectName" autocomplete="off"></div>
+      <div><label for="fChain">Chain</label><select id="fChain"><option>Robinhood Chain</option><option>Base</option><option>Ethereum</option><option>Solana</option><option>Ink</option><option>Other / X-only</option></select></div>
+      <div><label for="fPrize">What was promised</label><input id="fPrize" placeholder="e.g. 10 GTD spots / $200 SOL" autocomplete="off"></div>
+      <div><label for="fDue">When was it due</label><input id="fDue" placeholder="e.g. Nov 10, 2026 — or “24h from post”" autocomplete="off"></div>
+      <div style="grid-column:1/-1"><label for="fLink">Link to the original promise post</label><input id="fLink" placeholder="https://x.com/…" autocomplete="off" inputmode="url"></div>
+    </form>
+    <div class="packet" id="packet">CORPSE LEDGER — NEW SUBMISSION
+Project: —
+Prize: —
+Chain: —
+Due: —
+Promise post: —
+Status on submission: UNVERIFIED — enters the queue for the two-check gate.</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="copyBtn" type="button">Copy submission packet</button>
+      <a class="btn btn-ghost" href="https://x.com/Foil667" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">Send it to @Foil667 on X ↗</a>
+      <button class="btn btn-ghost" id="clearBtn" type="button">Clear form</button>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <p style="font-size:13px;margin-bottom:0">A submission is a lead, not a verdict. Nothing appears in the case files until the original post is located and the delivery checks are logged.</p>
+  </section>
+</div>
+
+<footer><div class="wrap"><span><strong style="color:var(--ink)">The Corpse Ledger</strong> — Foil's verification desk · Opened Oct 20, 2026 · Snapshot of case files #01–#16 as filed.</span><span class="mono">PROOF IS THE AESTHETIC — EVERY VERDICT KEEPS ITS RECEIPTS.</span></div></footer>
+
+<script>
+(function(){
+  var entries = Array.prototype.slice.call(document.querySelectorAll('.entry'));
+  var q = document.getElementById('q');
+  var chainFilter = document.getElementById('chainFilter');
+  var sortSel = document.getElementById('sortSel');
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+  var container = document.getElementById('entries');
+  var empty = document.getElementById('emptyState');
+  var countLabel = document.getElementById('countLabel');
+  var activeVerdict = '';
+
+  var originalOrder = entries.slice();
+  var rank = { overdue: 0, npa: 1, watching: 2, delivered: 3 };
+
+  function apply(){
+    var term = (q.value || '').trim().toLowerCase();
+    var chain = chainFilter.value;
+    var visible = [];
+    entries.forEach(function(el){
+      var okV = !activeVerdict || el.getAttribute('data-verdict') === activeVerdict;
+      var okC = !chain || el.getAttribute('data-chain') === chain;
+      var hay = (el.textContent + ' ' + (el.getAttribute('data-search')||'')).toLowerCase();
+      var okQ = !term || hay.indexOf(term) !== -1;
+      var show = okV && okC && okQ;
+      el.style.display = show ? '' : 'none';
+      if (show) visible.push(el);
+    });
+    // sort visible in DOM order
+    var mode = sortSel.value;
+    var ordered = visible.slice();
+    if (mode === 'overdue') ordered.sort(function(a,b){ return (rank[a.getAttribute('data-verdict')]||9) - (rank[b.getAttribute('data-verdict')]||9); });
+    if (mode === 'delivered') ordered.sort(function(a,b){ return ((a.getAttribute('data-verdict')==='delivered')?0:1) - ((b.getAttribute('data-verdict')==='delivered')?0:1); });
+    if (mode === 'num') ordered = originalOrder.filter(function(el){ return visible.indexOf(el) !== -1; });
+    ordered.forEach(function(el){ container.appendChild(el); });
+    empty.classList.toggle('show', visible.length === 0);
+    countLabel.textContent = 'Showing ' + visible.length + ' of ' + entries.length;
+  }
+  chips.forEach(function(chip){
+    chip.addEventListener('click', function(){
+      activeVerdict = chip.getAttribute('data-filter') || '';
+      chips.forEach(function(c){ c.setAttribute('aria-pressed', c === chip ? 'true' : 'false'); });
+      apply();
+    });
+  });
+  q.addEventListener('input', apply);
+  chainFilter.addEventListener('change', apply);
+  sortSel.addEventListener('change', apply);
+  apply();
+
+  // Submission packet
+  var fields = { project: document.getElementById('fProject'), prize: document.getElementById('fPrize'), chain: document.getElementById('fChain'), due: document.getElementById('fDue'), link: document.getElementById('fLink') };
+  var packet = document.getElementById('packet');
+  var toast = document.getElementById('toast');
+  function renderPacket(){
+    function v(el, fallback){ var t = (el.value||'').trim(); return t || fallback; }
+    packet.textContent =
+      'CORPSE LEDGER — NEW SUBMISSION\n' +
+      'Project: ' + v(fields.project, '—') + '\n' +
+      'Prize: ' + v(fields.prize, '—') + '\n' +
+      'Chain: ' + fields.chain.value + '\n' +
+      'Due: ' + v(fields.due, '—') + '\n' +
+      'Promise post: ' + v(fields.link, '—') + '\n' +
+      'Status on submission: UNVERIFIED — enters the queue for the two-check gate.';
+  }
+  Object.keys(fields).forEach(function(k){ fields[k].addEventListener('input', renderPacket); fields[k].addEventListener('change', renderPacket); });
+  renderPacket();
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var text = packet.textContent;
+    function done(){ toast.textContent = 'Copied. Send the packet to Foil — it enters the verification queue as UNVERIFIED.'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function(){ fallback(); });
+    } else { fallback(); }
+    function fallback(){
+      var ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch(e){ toast.textContent = 'Copy failed — select the packet text above and copy it manually.'; }
+      document.body.removeChild(ta);
+    }
+  });
+  document.getElementById('clearBtn').addEventListener('click', function(){
+    fields.project.value=''; fields.prize.value=''; fields.due.value=''; fields.link.value=''; fields.chain.selectedIndex=0;
+    toast.textContent=''; renderPacket(); fields.project.focus();
+  });
+})();
+</script>
+</body>
+</html>
